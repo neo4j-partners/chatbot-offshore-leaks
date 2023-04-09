@@ -1,7 +1,7 @@
 import os
 from neo4j import GraphDatabase
 
-host = os.environ["NEO4J_HOST"]
+host = os.environ["NEO4J_HOST"]+":"+os.environ["NEO4J_PORT"]
 user = os.environ["NEO4J_USER"]
 password = os.environ["NEO4J_PASSWORD"]
 db = os.environ["NEO4J_DB"]
