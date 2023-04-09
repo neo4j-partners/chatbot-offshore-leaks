@@ -75,14 +75,17 @@ def getExamplePrompts():
 
 
 def generate_response(prompt):
-    chat = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
-    chat_prompt = createPrompt()
-    chain = LLMChain(llm=chat, prompt=chat_prompt)
-    cypher_query = chain.run(schema + "\nQuestion: "+ prompt)
-    logging.debug(cypher_query)
-    message = read_query(extract_cypher(cypher_query))
-    logging.debug(message)
-    return message, cypher_query
+    try:
+        chat = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+        chat_prompt = createPrompt()
+        chain = LLMChain(llm=chat, prompt=chat_prompt)
+        cypher_query = chain.run(schema + "\nQuestion: "+ prompt)
+        logging.debug(cypher_query)
+        message = read_query(extract_cypher(cypher_query))
+        logging.debug(message)
+        return message, cypher_query
+    except:
+        return prompt, "LLM Token Limit Exceeded. Please try again"
 
 # Storing the chat
 if 'generated' not in st.session_state:
