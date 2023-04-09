@@ -1,13 +1,15 @@
+import os
 from neo4j import GraphDatabase
 
-host = 'bolt://host.docker.internal:7689'
-user = 'neo4j'
-password = 'Foo12345678'
+host = os.environ["NEO4J_HOST"]
+user = os.environ["NEO4J_USER"]
+password = os.environ["NEO4J_PASSWORD"]
+db = os.environ["NEO4J_DB"]
 driver = GraphDatabase.driver(host, auth=(user, password))
 
 
 def read_query(query, params={}):
-    with driver.session(database='leaks') as session:
+    with driver.session(database=db) as session:
         try:
             result = session.run(query, params)
             response = [returnTextRes(r.values()[0]) for r in result]

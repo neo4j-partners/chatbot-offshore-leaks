@@ -19,13 +19,12 @@ from langchain.schema import (
 import streamlit as st
 from streamlit_chat import message
 
-from driver import read_query, get_article_text
+from driver import read_query
 from train_cypher import template, schema, instr_template, examples
 
 st.title("Offshore Leaks Chatbot - Powered by Neo4j & GenAI")
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-openai.api_key = os.environ.get('OPENAI_KEY')
 cypher_prefix = ["ALTER","CALL","CREATE","DEALLOCATE","DELETE","DENY","DETACH","DROP","DRYRUN","ENABLE","FOREACH","GRANT","LOAD","MATCH","MERGE","OPTIONAL","REALLOCATE","REMOVE","RENAME","RETURN","REVOKE","SET","SHOW","START","STOP","TERMINATE","UNWIND","USE","USING","WITH"]
 
 
