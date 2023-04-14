@@ -2,7 +2,8 @@ import os
 import openai
 import logging, sys
 import time
-from langchain.chat_models import ChatOpenAI
+from langchain.llms import AzureOpenAI
+from langchain.chat_models import AzureChatOpenAI
 from langchain import LLMChain
 from langchain.prompts.prompt import PromptTemplate
 from langchain.prompts.chat import (
@@ -75,7 +76,10 @@ def getExamplePrompts():
 
 def generate_response(prompt):
     try:
-        chat = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+        chat = AzureChatOpenAI(temperature=0, 
+                               openai_api_version="2023-03-15-preview",
+                               deployment_name="gpt-35-turbo", 
+                               model_name="gpt-35-turbo")
         chat_prompt = createPrompt()
         chain = LLMChain(llm=chat, prompt=chat_prompt)
         cypher_query = chain.run(schema + "\nQuestion: "+ prompt)

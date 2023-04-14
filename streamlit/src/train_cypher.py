@@ -14,8 +14,8 @@ examples = [{
     "q": 'Where do most Officers come from?',
     "a": """MATCH (o:Officer)-[]->(a:Address) WHERE a.countries is not null RETURN a.countries, COUNT(o) ORDER BY COUNT(o) DESC LIMIT 1"""
 }, {
-    "q": 'Which countries has the most number of Entities?',
-    "a": """MATCH (e:Entity)-->(a:Address) WHERE a.countries is not null WITH a.countries AS country, count(DISTINCT e) AS numEntities RETURN country, numEntities ORDER BY numEntities DESC LIMIT 1"""
+    "q": 'Name top 5 countries has the most number of Entities',
+    "a": """MATCH (e:Entity)-->(a:Address) WHERE a.countries is not null WITH a.countries AS country, count(DISTINCT e) AS numEntities RETURN country, numEntities ORDER BY numEntities DESC LIMIT 5"""
 }, {
     "q": 'Name two similar officers located in UAE?',
     "a": """MATCH (a:Officer)-[:officer_of]->(:Entity)-[:registered_address]->(:Address{countries:"United Arab Emirates"})<-[:registered_address]-(:Entity)<-[:officer_of]-(b:Officer) WHERE (a)-[:similar]-(b) RETURN DISTINCT a.name, b.name LIMIT 1"""
@@ -36,12 +36,10 @@ examples = [{
         MATCH p=allShortestPaths((a)-[:officer_of|intermediary_of|registered_address*..10]-(b))
         return distinct reduce(s=head(nodes(p)).name, n in tail(nodes(p)) | s+"->"+n.name) as path
         LIMIT 50"""
+}, {
+    "q": 'what are the Entities that are named "Mossack Fonseca"',
+    "a": """MATCH (e:Entity) WHERE e.name CONTAINS "Mossack Fonseca" RETURN e.name"""
 }]
-
-# , {
-#     "q": 'what are the Entities that are named "Mossack Fonseca"',
-#     "a": """MATCH (e:Entity) WHERE e.name CONTAINS "Mossack Fonseca" RETURN e.name"""
-# }
 
 instr_template = """
 Here are the instructions to follow:
