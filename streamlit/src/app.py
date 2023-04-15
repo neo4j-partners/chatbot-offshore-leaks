@@ -78,8 +78,8 @@ def generate_response(prompt):
     try:
         chat = AzureChatOpenAI(temperature=0, 
                                openai_api_version="2023-03-15-preview",
-                               deployment_name="gpt-35-turbo", 
-                               model_name="gpt-35-turbo")
+                               deployment_name="gpt-4-32k", 
+                               model_name="gpt-4-32k")
         chat_prompt = createPrompt()
         chain = LLMChain(llm=chat, prompt=chat_prompt)
         cypher_query = chain.run(schema + "\nQuestion: "+ prompt)

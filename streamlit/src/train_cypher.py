@@ -18,7 +18,7 @@ examples = [{
     "a": """MATCH (e:Entity)-->(a:Address) WHERE a.countries is not null WITH a.countries AS country, count(DISTINCT e) AS numEntities RETURN country, numEntities ORDER BY numEntities DESC LIMIT 5"""
 }, {
     "q": 'Name two similar officers located in UAE?',
-    "a": """MATCH (a:Officer)-[:officer_of]->(:Entity)-[:registered_address]->(:Address{countries:"United Arab Emirates"})<-[:registered_address]-(:Entity)<-[:officer_of]-(b:Officer) WHERE (a)-[:similar]-(b) RETURN DISTINCT a.name, b.name LIMIT 1"""
+    "a": """MATCH (a:Officer)-[:officer_of]->(:Entity)-[:registered_address]->(:Address{countries:"United Arab Emirates"})<-[:registered_address]-(:Entity)<-[:officer_of]-(b:Officer) WHERE (a)-[:similar]-(b) RETURN DISTINCT a.name, b.name LIMIT 2"""
 }, {
     "q": "Fetch all the Officers associated with another Officer named 'GORYUKHIN'",
     "a": """MATCH (o:Officer)-[:officer_of*1..3]-(b:Officer) WHERE o.name CONTAINS 'GORYUKHIN' RETURN DISTINCT b.name"""
