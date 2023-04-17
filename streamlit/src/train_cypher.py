@@ -1,52 +1,58 @@
 examples = [{
-    "q": "Is Officer 'Ilham Alyev' is connected to any other Officer named 'Aliyeva'?",
-    "a": """MATCH (a:Officer{name:'Ilham Aliyev'})-[:officer_of*1..3]-(b:Officer) WHERE b.name CONTAINS 'Aliyeva' RETURN DISTINCT b.name"""
+    "question": "Is Officer 'Ilham Alyev' is connected to any other Officer named 'Aliyeva'?",
+    "answer": """MATCH (a:Officer{name:'Ilham Aliyev'})-[:officer_of*1..3]-(b:Officer) WHERE b.name CONTAINS 'Aliyeva' RETURN DISTINCT b.name"""
 }, {
-    "q": 'Where is "Mehriban Aliyeva" located?',
-    "a": """MATCH (n:Officer{name:"Mehriban Aliyeva"})-[:registered_address]->(a:Address) RETURN a.address"""
+    "question": 'Where is "Mehriban Aliyeva" located?',
+    "answer": """MATCH (n:Officer{name:"Mehriban Aliyeva"})-[:registered_address]->(a:Address) RETURN a.address"""
 }, {
-    "q": 'which is the most connected Intermediary?',
-    "a": """MATCH (i:Intermediary) RETURN i.name, SIZE([(i)-[]-(o:Officer) | o]) AS officer_connections, SIZE([(i)-[]-(e:Entity) | e]) AS entity_connections ORDER BY officer_connections DESC, entity_connections DESC LIMIT 1"""
+    "question": 'which is the most connected Intermediary?',
+    "answer": """MATCH (i:Intermediary) RETURN i.name, SIZE([(i)-[]-(o:Officer) | o]) AS officer_connections, SIZE([(i)-[]-(e:Entity) | e]) AS entity_connections ORDER BY officer_connections DESC, entity_connections DESC LIMIT 1"""
 }, {
-    "q": 'What is the address of "Mossack Fonseca & Co. Ecuador S.A.?',
-    "a": """MATCH (e:Entity{name: "Mossack Fonseca & Co. Ecuador S.A."}) RETURN e.address"""
+    "question": 'What is the address of Mossack Fonseca & Co. Ecuador S.A.?',
+    "answer": """MATCH (e:Entity{name: "Mossack Fonseca & Co. Ecuador S.A."}) RETURN e.address"""
 }, {
-    "q": 'Where do most Officers come from?',
-    "a": """MATCH (o:Officer)-[]->(a:Address) WHERE a.countries is not null RETURN a.countries, COUNT(o) ORDER BY COUNT(o) DESC LIMIT 1"""
+    "question": 'Where do most Officers come from?',
+    "answer": """MATCH (o:Officer)-[]->(a:Address) WHERE a.countries is not null RETURN a.countries, COUNT(o) ORDER BY COUNT(o) DESC LIMIT 1"""
 }, {
-    "q": 'Name top 5 countries has the most number of Entities',
-    "a": """MATCH (e:Entity)-->(a:Address) WHERE a.countries is not null WITH a.countries AS country, count(DISTINCT e) AS numEntities RETURN country, numEntities ORDER BY numEntities DESC LIMIT 5"""
+    "question": 'Name top 5 countries has the most number of Entities',
+    "answer": """MATCH (e:Entity)-->(a:Address) WHERE a.countries is not null WITH a.countries AS country, count(DISTINCT e) AS numEntities RETURN country, numEntities ORDER BY numEntities DESC LIMIT 5"""
 }, {
-    "q": 'Name two similar officers located in UAE?',
-    "a": """MATCH (a:Officer)-[:officer_of]->(:Entity)-[:registered_address]->(:Address{countries:"United Arab Emirates"})<-[:registered_address]-(:Entity)<-[:officer_of]-(b:Officer) WHERE (a)-[:similar]-(b) RETURN DISTINCT a.name, b.name LIMIT 2"""
+    "question": 'Name two similar officers located in UAE?',
+    "answer": """MATCH (a:Officer)-[:officer_of]->(:Entity)-[:registered_address]->(:Address{countries:"United Arab Emirates"})<-[:registered_address]-(:Entity)<-[:officer_of]-(b:Officer) WHERE (a)-[:similar]-(b) RETURN DISTINCT a.name, b.name LIMIT 2"""
 }, {
-    "q": "Fetch all the Officers associated with another Officer named 'GORYUKHIN'",
-    "a": """MATCH (o:Officer)-[:officer_of*1..3]-(b:Officer) WHERE o.name CONTAINS 'GORYUKHIN' RETURN DISTINCT b.name"""
+    "question": "Fetch all the Officers associated with another Officer named 'GORYUKHIN'",
+    "answer": """MATCH (o:Officer)-[:officer_of*1..3]-(b:Officer) WHERE o.name CONTAINS 'GORYUKHIN' RETURN DISTINCT b.name"""
 }, {
-    "q": 'What are all the companies that Neelie Kroes has direct links to?',
-    "a": """MATCH (o:Officer{name:"Neelie Kroes"})-[:officer_of]->(c:Entity) RETURN DISTINCT c.name"""
+    "question": 'What are all the companies that Neelie Kroes has direct links to?',
+    "answer": """MATCH (o:Officer{name:"Neelie Kroes"})-[:officer_of]->(c:Entity) RETURN DISTINCT c.name"""
 }, {
-    "q": "Which leaks was 'MINT HOLDINGS LTD.' associated?",
-    "a": """MATCH (e:Entity) WHERE e.name =~ 'MINT HOLDINGS LTD.' RETURN e.sourceID"""
+    "question": "Which leaks was 'MINT HOLDINGS LTD.' associated?",
+    "answer": """MATCH (e:Entity) WHERE e.name =~ 'MINT HOLDINGS LTD.' RETURN e.sourceID"""
 }, {
-    "q": "what is the shortest path between 'Ilham Aliyev' & 'Mehriban Aliyeva'?",
-    "a": """MATCH (a:Officer),(b:Officer)
+    "question": "what is the shortest path between 'Ilham Aliyev' & 'Mehriban Aliyeva'?",
+    "answer": """MATCH (a:Officer),(b:Officer)
         WHERE a.name CONTAINS 'Ilham Aliyev' 
           AND b.name CONTAINS 'Mehriban Aliyeva'
         MATCH p=allShortestPaths((a)-[:officer_of|intermediary_of|registered_address*..10]-(b))
         return distinct reduce(s=head(nodes(p)).name, n in tail(nodes(p)) | s+"->"+n.name) as path
         LIMIT 50"""
 }, {
-    "q": 'what are the Entities that are named "Mossack Fonseca"',
-    "a": """MATCH (e:Entity) WHERE e.name CONTAINS "Mossack Fonseca" RETURN e.name"""
+    "question": 'what are the Entities that are named "Mossack Fonseca"',
+    "answer": """MATCH (e:Entity) WHERE e.name CONTAINS "Mossack Fonseca" RETURN e.name"""
+}, {
+    "question": 'Name 5 companies from Taiwan that have high degree centrality.',
+    "answer": """MATCH (e:Entity)-[:registered_address]->(a:Address{countries:"Taiwan"}) WITH e, COUNT(*) AS degree_centrality RETURN e.name, degree_centrality ORDER BY degree_centrality DESC LIMIT 5"""
 }]
 
 instr_template = """
 Here are the instructions to follow:
 1. Use the Neo4j schema to generate cypher compatible ONLY for Neo4j Version 5
-2. Do not use exists in the cypher.
+2. Do not use EXISTS, SIZE keywords in the cypher.
 3. Use only Nodes and relationships mentioned in the schema while generating the reponse
 4. Reply ONLY in Cypher when it makes sense.
+5. Whenever you search for an Officer name or an Entity name or an Intermediary name, always do case-insensitive and fuzzy search
+6. Officer node is synonymous to Person
+7. Entity nodes are synonymous to Shell Companies
 """
 
 
