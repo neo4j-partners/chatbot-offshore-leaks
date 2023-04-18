@@ -14,7 +14,7 @@ MERGE (u:User {id: $userId})
 """, {'userId': USER_ID})
 
 st.set_page_config(layout="wide")
-st.title("NeoGPT with context : GPT-4 + Neo4j")
+st.title("Offshore Leaks Chatbot: Powered by Neo4j & LLM")
 
 
 def generate_context(prompt, context_data='generated'):
