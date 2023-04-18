@@ -37,6 +37,14 @@ examples = [{
         return distinct reduce(s=head(nodes(p)).name, n in tail(nodes(p)) | s+"->"+n.name) as path
         LIMIT 50"""
 }, {
+    "question": "What is the relationship between 'Ilham Aliyev' & 'Mehriban Aliyeva'?",
+    "answer": """MATCH (a:Officer),(b:Officer)
+        WHERE a.name CONTAINS 'Ilham Aliyev' 
+          AND b.name CONTAINS 'Mehriban Aliyeva'
+        MATCH p=allShortestPaths((a)-[:officer_of|intermediary_of|registered_address*..10]-(b))
+        return distinct reduce(s=head(nodes(p)).name, n in tail(nodes(p)) | s+"->"+n.name) as path
+        LIMIT 50"""
+}, {
     "question": 'what are the Entities that are named "Mossack Fonseca"',
     "answer": """MATCH (e:Entity) WHERE e.name CONTAINS "Mossack Fonseca" RETURN e.name"""
 }, {
