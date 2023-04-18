@@ -50,6 +50,11 @@ examples = [{
 }, {
     "question": 'Name 5 companies from Taiwan that have high degree centrality.',
     "answer": """MATCH (e:Entity)-[:registered_address]->(a:Address{countries:"Taiwan"}) WITH e, COUNT(*) AS degree_centrality RETURN e.name, degree_centrality ORDER BY degree_centrality DESC LIMIT 5"""
+}, {
+    "question": "How many Shell companies are owned by Taiwanese?",
+    "answer": """
+    MATCH (o:Officer)-[:officer_of]->(e:Entity), (o)-[:registered_address]->(a:Address{countries:"Taiwan"}) RETURN COUNT(DISTINCT e)
+    """
 }]
 
 instr_template = """
