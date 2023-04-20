@@ -79,8 +79,7 @@ if user_input:
         # Harcode result limit to 10
         results = results[:10]
         # Graph2text
-        answer = str(results)
-        generate_response(generate_context(
+        answer = generate_response(generate_context(
             f"Question was {user_input} and the response should include only information that is given here: {str(results)}"))
         print('Total Time : {}'.format(timer() - start))
         st.session_state.database_results.append(str(results))
