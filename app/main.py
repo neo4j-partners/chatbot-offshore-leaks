@@ -4,14 +4,13 @@ from streamlit_chat import message
 from neo4j_driver import run_query
 from english2cypher import generate_cypher
 from graph2text import generate_response
+from timeit import default_timer as timer
 
 # Hardcoded UserID
 USER_ID = "bot"
 
 # On the first execution, we have to create a user node in the database.
-run_query("""
-MERGE (u:User {id: $userId})
-""", {'userId': USER_ID})
+run_query("""MERGE (u:User {id: $userId})""", {'userId': USER_ID})
 
 st.set_page_config(layout="wide")
 st.title("Offshore Leaks Chatbot: Powered by Neo4j & LLM")
@@ -20,7 +19,6 @@ st.title("Offshore Leaks Chatbot: Powered by Neo4j & LLM")
 def generate_context(prompt, context_data='generated'):
     context = []
     # If any history exists
-    print(str(st.session_state['generated']))
     if st.session_state['generated']:
         # Add the last three exchanges
         size = len(st.session_state['generated'])
@@ -63,12 +61,12 @@ user_input = get_text()
 
 
 if user_input:
-    print(user_input)
-    print(str(generate_context(user_input, 'database_results')))
+    start = timer()
     cypher = generate_cypher(generate_context(user_input, 'database_results'))
     # If not a valid Cypher statement
     if not "MATCH" in cypher:
         print('No Cypher was returned')
+        print('Total Time : {}'.format(timer() - start))
         st.session_state.user_input.append(user_input)
         st.session_state.generated.append(
             cypher)
@@ -81,8 +79,10 @@ if user_input:
         # Harcode result limit to 10
         results = results[:10]
         # Graph2text
-        answer = generate_response(generate_context(
+        answer = str(results)
+        generate_response(generate_context(
             f"Question was {user_input} and the response should include only information that is given here: {str(results)}"))
+        print('Total Time : {}'.format(timer() - start))
         st.session_state.database_results.append(str(results))
         st.session_state.user_input.append(user_input)
         st.session_state.generated.append(answer),

@@ -1,5 +1,4 @@
-import os
-import openai
+from timeit import default_timer as timer
 
 from langchain.chat_models import AzureChatOpenAI
 from langchain import LLMChain
@@ -33,7 +32,7 @@ def createPrompt(messages):
     tmp = []
     for _ in range(3):
         if(len(messages) > 0):
-            msg = messages.pop().replace("{", "{{").replace("}", "}}")
+            msg = messages.pop()
             tmp.append(HumanMessage(content=msg))
     if len(tmp) > 0:
         tmp.reverse()
@@ -43,6 +42,7 @@ def createPrompt(messages):
     return ChatPromptTemplate.from_messages(prompt)
 
 def generate_response(messages):
+    start = timer()
     try:
         chat = AzureChatOpenAI(temperature=0, 
                 openai_api_version="2023-03-15-preview",
@@ -60,8 +60,6 @@ def generate_response(messages):
         return response
     except:
         return "LLM Token Limit Exceeded. Please try again"
+    finally:
+        print('Response Generation Time : {}'.format(timer() - start))
 
-
-if __name__ == '__main__':
-    data = ['UAE']
-    print(generate_response(data))

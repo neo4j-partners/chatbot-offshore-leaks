@@ -1,6 +1,7 @@
 import os
 import openai
 from retry import retry
+from timeit import default_timer as timer
 
 from langchain.chat_models import AzureChatOpenAI
 from langchain import LLMChain
@@ -21,7 +22,6 @@ cypher_prefix = ["ALTER","CALL","CREATE","DEALLOCATE","DELETE","DENY","DETACH","
 
 
 def extract_cypher(s):
-    print(s)
     if s.startswith(tuple(cypher_prefix)):
         return s
     else:
@@ -46,12 +46,10 @@ def createPrompt(messages):
     tmp = []
     for _ in range(6):
         if(len(messages) > 0):
-            aiMsg = messages.pop().replace("{", "{{").replace("}", "}}")
-            print(aiMsg)
+            aiMsg = messages.pop()
             tmp.append(AIMessage(
                 content=aiMsg))
-            huMsg = messages.pop().replace("{", "{{").replace("}", "}}")
-            print(huMsg)
+            huMsg = messages.pop()
             tmp.append(HumanMessage(content=huMsg))
     if len(tmp) > 0:
         tmp.reverse()
@@ -78,12 +76,13 @@ def getExamplePrompts():
     return eg_prompt
 
 
-@retry(tries=2, delay=5)
+@retry(tries=1, delay=5)
 def generate_cypher(messages):
+    start = timer()
     try:
         chat = AzureChatOpenAI(temperature=0, 
                             openai_api_version="2023-03-15-preview",
-                            deployment_name="gpt-4-32k", 
+                            deployment_name="gpt-4-32k",
                             model_name="gpt-4-32k")
         if messages:
             question = messages.pop()
@@ -98,16 +97,16 @@ def generate_cypher(messages):
             raise Exception(
                 "GPT bypassed system message and is returning response based on previous conversation history" + response)
         # If the model apologized, remove the first line
-        if "apologi" in response:
+        elif "apologi" in response:
             response = " ".join(response.split("\n")[1:])
         # Sometime the model adds quotes around Cypher when it wants to explain stuff
-        if "`" in response:
+        elif "`" in response:
             response = response.split("```")[1].strip("`")
         # print(response)
         return response
     except:
         return "LLM Token Limit Exceeded. Please try again"
+    finally:
+        print('Cypher Generation Time : {}'.format(timer() - start))
 
 
-if __name__ == '__main__':
-    print(generate_cypher(['Where is "Mehriban Aliyeva" located?']))
