@@ -1,8 +1,8 @@
 import os
 import openai
-import logging, sys
-import time
-from langchain.llms import AzureOpenAI
+from retry import retry
+from timeit import default_timer as timer
+
 from langchain.chat_models import AzureChatOpenAI
 from langchain import LLMChain
 from langchain.prompts.prompt import PromptTemplate
@@ -17,20 +17,11 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage
 )
-import streamlit as st
-from streamlit_chat import message
-
-from driver import read_query
 from train_cypher import template, schema, instr_template, examples
-
-st.title("Offshore Leaks Chatbot - Powered by Neo4j & LLM")
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
 cypher_prefix = ["ALTER","CALL","CREATE","DEALLOCATE","DELETE","DENY","DETACH","DROP","DRYRUN","ENABLE","FOREACH","GRANT","LOAD","MATCH","MERGE","OPTIONAL","REALLOCATE","REMOVE","RENAME","RETURN","REVOKE","SET","SHOW","START","STOP","TERMINATE","UNWIND","USE","USING","WITH"]
 
 
 def extract_cypher(s):
-    print(s)
     if s.startswith(tuple(cypher_prefix)):
         return s
     else:
@@ -40,9 +31,9 @@ def extract_cypher(s):
         return extract_cypher(arr[1])
     
 
-def createPrompt():
+def createPrompt(messages):
     sys_tpl="You are an assistant that translates english to Neo4j cypher"
-    system_message_prompt = SystemMessagePromptTemplate.from_template(sys_tpl)
+    system_message_prompt = SystemMessage(content=sys_tpl)
     instr_human = HumanMessagePromptTemplate(
         prompt=PromptTemplate(
             template=instr_template,
@@ -52,6 +43,17 @@ def createPrompt():
     instr_ai = AIMessage(content='Roger that')
     prompt = [system_message_prompt, instr_human, instr_ai]
     prompt = prompt + getExamplePrompts()
+    tmp = []
+    for _ in range(6):
+        if(len(messages) > 0):
+            aiMsg = messages.pop()
+            tmp.append(AIMessage(
+                content=aiMsg))
+            huMsg = messages.pop()
+            tmp.append(HumanMessage(content=huMsg))
+    if len(tmp) > 0:
+        tmp.reverse()
+        prompt = prompt + tmp
     human_message_prompt = HumanMessagePromptTemplate.from_template(template)
     prompt.append(human_message_prompt)
     return ChatPromptTemplate.from_messages(prompt)
@@ -74,63 +76,37 @@ def getExamplePrompts():
     return eg_prompt
 
 
-def generate_response(prompt):
+@retry(tries=1, delay=5)
+def generate_cypher(messages):
+    start = timer()
     try:
         chat = AzureChatOpenAI(temperature=0, 
-                               openai_api_version="2023-03-15-preview",
-                               deployment_name="gpt-4-32k", 
-                               model_name="gpt-4-32k")
-        chat_prompt = createPrompt()
+                            openai_api_version="2023-03-15-preview",
+                            deployment_name="gpt-4-32k",
+                            model_name="gpt-4-32k")
+        if messages:
+            question = messages.pop()
+        else: 
+            question = 'Where is "Mehriban Aliyeva" located?'
+        chat_prompt = createPrompt(messages)
         chain = LLMChain(llm=chat, prompt=chat_prompt)
-        cypher_query = chain.run(schema + "\nQuestion: "+ prompt)
-        logging.debug(cypher_query)
-        message = read_query(extract_cypher(cypher_query))
-        logging.debug(message)
-        return message, cypher_query
+        response = chain.run(schema + "\nQuestion: "+ question)
+        # Sometime the models bypasses system prompt and returns
+        # data based on previous dialogue history
+        if not "MATCH" in response and "{" in response:
+            raise Exception(
+                "GPT bypassed system message and is returning response based on previous conversation history" + response)
+        # If the model apologized, remove the first line
+        elif "apologi" in response:
+            response = " ".join(response.split("\n")[1:])
+        # Sometime the model adds quotes around Cypher when it wants to explain stuff
+        elif "`" in response:
+            response = response.split("```")[1].strip("`")
+        # print(response)
+        return response
     except:
-        return prompt, "LLM Token Limit Exceeded. Please try again"
-
-# Storing the chat
-if 'generated' not in st.session_state:
-    st.session_state['generated'] = []
-
-if 'past' not in st.session_state:
-    st.session_state['past'] = []
+        return "LLM Token Limit Exceeded. Please try again"
+    finally:
+        print('Cypher Generation Time : {}'.format(timer() - start))
 
 
-def get_text():
-    input_text = st.text_input(
-        "Ask away", "", key="input")
-    return input_text
-
-
-col1, col2 = st.columns([2, 1])
-
-
-with col2:
-    another_placeholder = st.empty()
-with col1:
-    placeholder = st.empty()
-user_input = get_text()
-
-
-if user_input:
-    output, cypher_query = generate_response(user_input)
-    # store the output
-    st.session_state.past.append(user_input)
-    st.session_state.generated.append((output, cypher_query))
-        
-
-# Message placeholder
-with placeholder.container():
-    if st.session_state['generated']:
-        message(st.session_state['past'][-1],
-                is_user=True, key=str(-1) + '_user')
-        for j, text in enumerate(st.session_state['generated'][-1][0]):
-            message(text, key=str(-1) + str(time.time()))
-
-# Generated Cypher statements
-with another_placeholder.container():
-    if st.session_state['generated']:
-        st.text_area("Generated Cypher / Suggestion",
-                     st.session_state['generated'][-1][1], height=240)

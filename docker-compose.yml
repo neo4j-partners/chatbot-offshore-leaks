@@ -1,11 +1,10 @@
 version: '3.7'
 services:
   streamlit:
-    build:
-      context: streamlit/.
-    hostname: streamlit
+    build: .
+    hostname: chatbot
     restart: always
-    container_name: streamlit
+    container_name: chatbot
     ports:
       - 8501:8501
     env_file:
